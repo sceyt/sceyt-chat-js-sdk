@@ -1,0 +1,280 @@
+SOFTWARE LICENSE AGREEMENT
+
+
+v.1 29 September 2022
+
+
+This Software License Agreement (the “License”) is a legally binding
+agreement between Sceyt LLC having a registered business address at
+Gai ave 26, 34, Yerevan, Armenia (“Sceyt”), the owner of the software
+development kit “SceytChat”, the related software and services
+(collectively, the “Licensed Content”) and an 
+individual user or a single entity accessing the Licensed Content (the 
+“Licensee”) (each individually a “Party” and collectively, the “Parties”).
+
+
+1. Acceptance of the License.
+
+1.1 By installing, accessing or otherwise using the Licensed Content,
+the Licensee confirms that the Licensee has read the License, accepts
+the terms of the License, and agrees to become legally bound by the License. 
+
+1.2 The Licensed Content is not marketed and should not be used by
+persons under the age of 18. If the Licensee is entering into the
+License on behalf of a legal entity, the Licensee represents that 
+the Licensee has the authority and the necessary capacity to bind such
+entity and its affiliates to the terms of the License.
+
+
+2. Grant of Rights
+
+2.1. Sceyt hereby grants the Licensee a commercial, worldwide, non-
+transferable, non-assignable, non-exclusive, royalty free, and
+revocable license to use the Licensed Content for the sole purpose of
+creating software applications designed to operate with the Licensed
+Content, in accordance with the terms of this License.
+
+2.2. The Licensed Content is licensed and not sold. The Licensee
+obtains the right to use the Licensed Content and not the ownership of
+the Licensed Content.
+
+2.3. The Licensed Content is licensed as a single product. Its 
+component parts may not be used separately.
+
+2.4. Sceyt reserves any rights not expressly granted to the Licensee
+under this License.
+
+2.5. The Licensee is allowed to make a reasonable number of copies of 
+the Licensed Content, as necessary for the purposes set forth herein,
+provided that only complete copies of the Licensed Content are made, 
+including without limitation all ‘read me’ files, copyright notices, 
+and other legal notices and terms included in the Licensed Content.
+
+2.6. The Licensee is permitted to load and run the Licensed Content on 
+any device, network or cloud virtual machines under Licensee’s control 
+(collectively, the “Devices”), if such Devices are compatible with the 
+Licensed Content. The Licensee is solely responsible for assessing the 
+compatibility of the Devices and ensuring that the Devices meet the 
+minimum requirements for the use of the Licensed Content as set forth 
+in the documentation provided by Sceyt.
+
+
+3. Covered Licensed Content and Services
+
+3.1. The License applies only to the Licensed Content as provided to 
+the Licensee by Sceyt. The License also applies to updates, 
+supplements, Internet-based services, and support services related to 
+the Licensed Content, or any other services provided in relation to 
+the Licensed Content, unless other terms and conditions have been 
+provided thereto.
+
+3.2. If the Licensee registers for a free trial of the Licensed 
+Content (subject to availability) or the Licensed Content is provided 
+free of charge, this License will also govern Licensee’s use of the 
+free trial of the Licensed Content or the Licensed Content provided 
+free of charge.
+
+3.3. Any Licensed Content or services that are not provided by Sceyt 
+are not covered by this License. Such Licensed Content and services 
+are subject to the terms and conditions set by the respective third 
+party and the Licensee is solely responsible for obtaining, agreeing 
+to, and complying with the respective terms and conditions at its own 
+cost and expense.
+
+3.4. Sceyt reserves the right, but is not under any obligation, to 
+provide paid or free-of-charge updates and technical support services 
+with regard to the Licensed Content, including fixing bugs and errors, 
+and the possibility to use new versions of the Licensed Content.
+
+
+4. Intellectual Property and Ownership
+
+4.1. All title and copyright in and to the Licensed Content 
+(including, but not limited to, any source code, images, graphics, 
+photographs, animations, video, audio, music, text, and applets, 
+incorporated in the Licensed Content) and any copies of the Licensed 
+Content are owned by Sceyt. The Licensed Content is protected by 
+Armenian copyright laws and international treaties. Sceyt shall at all 
+times retain the ownership of the Licensed Content.
+
+4.2. The Licensee is not permitted to, without obtaining prior written 
+authorisation from Sceyt, to use the trade names, trademarks, service 
+marks or product names of Sceyt, except as required for reasonable and 
+customary use of the Licensed Content.
+
+4.3. By creating the Applications or uploading any content through the 
+Licensed Content, the Licensee grants Sceyt unrestricted, sub-
+licensable, royalty-free, perpetual, and irrevocable rights to store, 
+use and reproduce the said content for the purposes of providing the 
+Licensee with the Licensed Content and other requested products, 
+services, or information.
+
+
+5. Acceptable Use Policy
+
+5.1. When using the Licensed Content, the Licensee is required to 
+follow the acceptable use policy outlined in this Section 5.
+
+5.2. The Licensee is not permitted to: breach any terms of the License 
+or applicable local, state, national and foreign laws, treaties, and 
+regulations; not to comply with the technical limitations of the 
+Licensed Content; make more copies of the Licensed Content than 
+necessary for necessary for the purposes set forth herein; publish the 
+Licensed Content for others to copy; edit, alter, modify, adapt, 
+translate or otherwise change the whole or any part of the Licensed 
+Content, nor decompile, disassemble or reverse engineer the Licensed 
+Content or attempt to do so; reproduce, copy, distribute, resell, 
+license, sublicense, loan, rent, or otherwise use the Licensed Content 
+for any purpose other than permitted under this License; remove any 
+copyright or other proprietary notices and legends; use the Licensed 
+Content to develop and produce products and technologies competing 
+with the Licensed Content or other services provided by Sceyt; and 
+interfere with or abuse other licensees of the Licensed Content.
+
+
+6. Limitation of Liability and Disclaimer of Warranties
+
+6.1. To the extent permitted by the applicable law, Sceyt expressly 
+disclaims all warranties, express or implied, for the Licensed 
+Content. Sceyt provides the Licensed Content on an “AS IS” BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or 
+implied, including, without limitation, any warranties or conditions 
+of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A 
+PARTICULAR PURPOSE. The entire risk arising out of use or performance 
+of the Licensed Content remains with the Licensee.
+
+6.2. In no event shall Sceyt be liable for any damages whatsoever 
+(including, without limitation, damages for loss of business profits, 
+business interruption, loss of business information, or any other 
+pecuniary loss) arising out of the use of or inability to use the 
+Licensed Content, even if Sceyt has been advised of the possibility of 
+such damages.
+
+6.3. The Licensee is solely responsible for determining the 
+appropriateness of the Licensed Content and assumes any risks 
+associated with Licensee’s exercise of permissions under the License.
+
+6.4. To the maximum extent permitted by law, Sceyt excludes any 
+liability for any loss or damage resulting from the acts and omissions 
+of such third-party service providers.
+
+
+7. Governing Law and Dispute Resolution
+
+7.1. This License and any disputes arising out of or in connection 
+with the License and the Licensed Content shall be governed by and 
+construed in accordance with the laws of Armenia. Unless otherwise 
+provided by the applicable law, all disputes arising out of or in 
+connection with the License shall be submitted to the exclusive 
+jurisdiction of the courts in Yerevan, Armenia.
+
+
+8. Final Provisions
+
+8.1. Availability. The availability of the Licensed Content may be 
+affected by factors, which Sceyt cannot reasonably control, such as 
+bandwidth problems, equipment failure, acts and omissionsof our third-
+party service providers, or force majeure events. Sceyt takes no 
+responsibility for the unavailability of the Licensed Content caused 
+by such factors.
+
+8.2. Indemnification. The Licensee shall indemnify Sceyt at Licensee’s 
+expense if any claims are asserted by a third party against Sceyt by 
+reason of Licensee’s misconduct or breach of any terms of the License.
+
+8.3. Severability. The unenforceability of any single provision of 
+this License shall not affect any other provision hereof.
+
+8.4. Waiver. A failure of either Party to enforce strictly a provision 
+of this License shall in no event be considered a waiver of any part 
+of such provision. No waiver by either Party of any breach or default 
+by the other party shall operate as a waiver of any succeeding breach 
+or other default or breach by such other Party.
+
+8.5. Term and termination. The License shall commence upon Licensee’s 
+access to the Licensed Content and continue until terminated by Sceyt. 
+Upon termination of the License, the Licensee agrees to (i) stop all 
+access and use of the Licensed Content and (ii) destroy all copies of 
+the Licensed Content and all its component parts stored on the 
+Devices. The provisions of the License that, by their nature, continue 
+and survive will survive any termination of the License.
+
+8.6. Amendments. Sceyt reserves the right, at its sole discretion, to 
+change or modify this License at any time by sending a prior 
+notification to the Licensee (if the contact details of the Licensee 
+are available to Sceyt).
+
+8.7. Entire agreement. This License constitutes the entire 
+understanding between the Parties with respect to the subject matter 
+thereof and supersedes all prior agreements, negotiations and 
+discussions between the Parties relating thereto.
+
+8.8. Contact. Sceyt can be contacted by email at legal@sceyt.com or 
+mail at Sceyt LLC, Gai ave 26, 34, Yerevan, Armenia.
+
+
+9. Third-party license notices
+
+9.1. Any content that is not provided by Sceyt is not covered by this 
+License. Such content is  subject to the terms and conditions set by 
+the respective third party and the Licensee is solely responsible for 
+obtaining, agreeing to, and complying with the respective terms and 
+conditions at its own cost and expense.
+
+9.2. Sceyt has made all efforts possible to avoid the Licensed Content 
+being subject to the rights of third parties, in particular that its 
+use does not infringe patents, copyrights or other intellectual 
+property rights of third parties. However, Sceyt does not guarantee 
+that the Licensed Content is not subject to the rights of third 
+parties.
+
+9.3. The Licensed Content was created by using the following software 
+(in part or in full), which remains subject to the below-specified 
+licenses:
+
+9.3.i. jsoncpp. Copyright © 2007-2010 Baptiste Lepilleur and The
+JsonCpp Authors. curl. Copyright © 2010-2013 Brian Cavalier and John
+Hann.libwebsockets. Copyright © 1995, 1996, 1997, and 1998. All
+licensed under the MIT License. Permission is hereby granted, free of 
+charge, to any person obtaining a copy of this software and associated 
+documentation files (the "Software"), to deal in the Software without 
+restriction, including without limitation the rights to use, copy, 
+modify, merge, publish, distribute, sublicense, and/or sell copies of 
+the Software, and to permit persons to whom the Software is furnished 
+to do so, subject to the following conditions: The above copyright 
+notice and this permission notice shall be included in all copies or 
+substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS 
+IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT 
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS 
+OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,ARISING 
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+DEALINGS IN THE SOFTWARE. https://opensource.org/licenses/MIT
+
+9.3.ii. openssl. Licensed under the Apache License 2.0. Some of the 
+files have been changed. https://www.apache.org/licenses/LICENSE-2.0
+
+9.3.iii. protobuf. Copyright 2008 Google Inc. All rights reserved. 
+Neither the name of Google Inc. nor the names of its contributors may 
+be used to endorse or promote products derived from this software 
+without specific prior written permission. Redistribution and use in 
+source and binary forms, with or without modification, are permitted 
+provided that the following conditions are met: *Redistributions of 
+source code must retain the above copyright notice, this list of 
+conditions and the following disclaimer. *Redistributions in binary 
+form must reproduce the above copyright notice, this list of 
+conditions and the following disclaimer in the documentation and/or 
+other materials provided with the distribution. *Neither the name of 
+Google Inc. nor the names of its contributors may be used to endorse 
+or promote products derived from this software without specific prior 
+written permission. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS 
+AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE 
+GOODS OR SERVICES; LOSS OF USE, INCLUDING NEGLIGENCE OR OTHERWISE) 
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+THE POSSIBILITY OF SUCH DAMAGE.
