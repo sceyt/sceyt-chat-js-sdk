@@ -1,8 +1,10 @@
 {
-  "name": "sceyt-chat-js-sdk",
+  "name": "sceyt-chat",
   "version": "1.0.0",
-  "description": "",
+  "description": "JavaScript SDK for integrating Sceyt Chat API into your web applications.",
+  "author": "Sceyt <support@sceyt.com>",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,6 +12,23 @@
     "type": "git",
     "url": "https://github.com/sceyt/sceyt-chat-js-sdk"
   },
-  "author": "Sceyt",
-  "license" : "SEE LICENSE IN LICENSE.txt"
+  "keywords": [
+    "sceyt",
+    "sceyt.com",
+    "messaging",
+    "chat",
+    "sdk",
+    "javascript"
+  ],
+  "dependencies": {
+    "axios": "^0.21.0",
+    "hashids": "^2.2.1",
+    "loglevel": "^1.8.0",
+    "loglevel-plugin-prefix": "^0.8.4",
+    "long": "^4.0.0",
+    "protobufjs": "~6.9.0",
+    "uuidv4": "^6.2.6"
+  },
+  "license" : "SEE LICENSE IN LICENSE.txt",
+  "homepage": "https://sceyt.com"
 }
