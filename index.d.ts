@@ -1,38 +1,33 @@
 export default SceytChat;
 
-declare class SceytChat {
-  chatClient: ChatClient;
+declare interface SceytChat {
+  readonly user: User;
+  connectionState: ConnectionState;
+  readonly settings: Settings
+  requestTimeout: number;
+  appId: string;
+  authToken: string;
   clientId: string;
-  constructor(apiUrl: string, appId: string, clientId: string, connectionTimeout?: number);
-  ConnectionListener(): ConnectionListener;
-  ChannelListener(): ChannelListener;
-  user: User;
+  apiUrl: string;
+  accessToken: string;
+  enableAutoSendMessageStatusDelivered: boolean;
+
+  constructor(apiUrl: string, appId: string, clientId: string, requestTimeout?: number);
+
   addChannelListener: (uniqueListenerId: string, channelListener: ChannelListener) => void;
   removeChannelListener: (uniqueListenerId: string) => void;
   addConnectionListener: (uniqueListenerId: string, connectionListener: ConnectionListener) => void;
   removeConnectionListener: (uniqueListenerId: string) => void;
-  connect: (jwt: string) => Promise<void | SceytChatError>;
+  connect: (accessToken: string) => Promise<void | SceytChatError>;
   disconnect: () => void;
-}
-
-declare class ChatClient {
-  user: User;
-  connectStatus: string;
-  readonly settings: ISettings
-
-  connectionTimeout: number;
-  appId: string;
-  authToken: string;
-  clientId: string;
-  connectUrl: string;
-  enableAutoSendMessageStatusDelivered: boolean;
   channelListeners: ChannelListener;
   connectionListeners: ConnectionListener;
+
   setLogLevel: (level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'silent') => void;
-  updateToken: (jwt: string) => Promise<unknown>;
-  setProfile: (profile: IUserProfile) => Promise<User>;
-  mute: (muteExpireTime: number) => Promise<ISettings>;
-  unmute: () => Promise<ISettings>;
+  updateToken: (accessToken: string) => Promise<unknown>;
+  setProfile: (profile: UserProfile) => Promise<User>;
+  mute: (muteExpireTime: number) => Promise<Settings>;
+  unmute: () => Promise<Settings>;
   getUsers: (usersIds: string[]) => Promise<User[]>;
   blockUsers: (usersIds: string[]) => Promise<User[]>;
   unblockUsers: (usersIds: string[]) => Promise<User[]>;
@@ -41,15 +36,16 @@ declare class ChatClient {
   getChannel: (id: string) => Promise<Channel>;
   getTotalUnreads: () => Promise<{ totalUnread: number, unreadChannels: number }>;
   consecutiveFailures: number;
-  PublicChannel: PublicChannel;
-  PrivateChannel: PrivateChannel;
-  DirectChannel: DirectChannel;
-  authState: 'NOT_AUTHENTICATED' | 'HTTP_AUTH_FAILED' | 'SOCKET_AUTH_FAILED' | 'HTTP_AUTHENTICATING'
-      | 'SOCKET_AUTHENTICATING' | 'HTTP_AUTHENTICATED' | 'SOCKET_AUTHENTICATED' | 'AUTHENTICATED' | 'CONNECTION_TIMEOUT';
-  channelReport(report: string, channelId: string, description?: string, messageIds?: string[]): Promise<void>;
-  messageReport(report: string, channelId: string, messageIds: string[], description?: string): Promise<void>;
-  userReport(report: string, userId: string, messageIds?: string[], description?: string): Promise<void>;
-  setPresence(state: 'Offline' | 'Online' | 'Invisible' | 'Away' | 'DND', status?: string): Promise<void>;
+  channelReport: (report: string, channelId: string, description?: string, messageIds?: string[]) => Promise<void>;
+  messageReport: (report: string, channelId: string, messageIds: string[], description?: string) => Promise<void>;
+  userReport: (report: string, userId: string, messageIds?: string[], description?: string) => Promise<void>;
+  setPresence: (state: 'Offline' | 'Online' | 'Invisible' | 'Away' | 'DND', status?: string) => Promise<void>;
+
+  PublicChannel(): PublicChannel;
+  PrivateChannel(): PrivateChannel;
+  DirectChannel(): DirectChannel;
+  ConnectionListener(): ConnectionListener;
+  ChannelListener(): ChannelListener;
   ChannelListQueryBuilder(): ChannelListQueryBuilder;
   MemberListQueryBuilder(channelId: string): MemberListQueryBuilder;
   BlockedMemberListQueryBuilder(): BlockedMemberListQueryBuilder;
@@ -69,8 +65,8 @@ interface SceytChatError extends Error{
   code: number
 }
 
-interface ICreatePublicChannel {
-  members: IMemberParams[];
+interface CreatePublicChannel {
+  members: MemberParams[];
   metadata?: string;
   subject: string;
   avatarUrl?: string;
@@ -78,20 +74,20 @@ interface ICreatePublicChannel {
   uri: string;
 }
 
-interface ICreatePrivateChannel {
-  members: IMemberParams[];
+interface CreatePrivateChannel {
+  members: MemberParams[];
   metadata?: string;
   subject: string;
   avatarUrl?: string;
   label?: string;
 }
-interface ICreateDirectChannel {
+interface CreateDirectChannel {
   userId: string;
   metadata?: string;
   label?: string;
 }
 
-export interface IPublicChannelConfig {
+export interface PublicChannelConfig {
   uri: string;
   subject: string;
   metadata: string;
@@ -99,33 +95,35 @@ export interface IPublicChannelConfig {
   label: string;
 }
 
-export interface IPrivateChannelConfig {
+export interface PrivateChannelConfig {
   subject: string;
   metadata: string;
   avatar: string;
   label: string;
 }
 
-export interface IDirectChannelConfig {
+export interface DirectChannelConfig {
   metadata: string;
   label: string;
 }
 
-interface IMemberParams {
+interface MemberParams {
   role: string;
   id: string;
 }
 
-export interface ISettings {
+export interface Settings {
   muted: boolean;
   muteExpireDate: Date | null;
   uploadSizeLimit: number
 }
 
-export declare type IUploadProgress = (progressPercent: number) => void;
-export declare type IUploadCompletion = (attachment: Attachment, err: SceytChatError) => void;
+type ConnectionState = 'Connecting' | 'Connected' | 'Disconnected' | 'Failed' | 'Reconnecting'
 
-interface IAttachmentParams {
+export declare type UploadProgress = (progressPercent: number) => void;
+export declare type UploadCompletion = (attachment: Attachment, err: SceytChatError) => void;
+
+interface AttachmentParams {
   uploadedFileSize?: number;
   data?: File;
   metadata?: string;
@@ -133,11 +131,11 @@ interface IAttachmentParams {
   type: string;
   url?: string;
   upload: boolean;
-  progress?: IUploadProgress;
-  completion?: IUploadCompletion;
+  progress?: UploadProgress;
+  completion?: UploadCompletion;
 }
 
-interface IUserProfile {
+interface UserProfile {
   firstName?: string;
   lastName?: string;
   avatarUrl?: string;
@@ -319,7 +317,7 @@ declare class AttachmentListQueryBuilder extends QueryBuilder {
   build: () => AttachmentListQuery;
 }
 
-interface MessageListQuery{
+interface MessageListQuery {
   channelId: string;
   loading: boolean;
   hasNext: boolean;
@@ -364,7 +362,7 @@ interface MessageListQuery{
   }>;
 }
 
-interface AttachmentListQuery{
+interface AttachmentListQuery {
   channelId: string;
   loading: boolean;
   hasNext: boolean;
@@ -417,7 +415,7 @@ declare class MessageBuilder {
   setType: (type: string) => this;
   setTransient: (isTransient: boolean) => this;
   setSilent: (isSilent: boolean) => this;
-  setAttachments: (attachments: IAttachmentParams[]) => this;
+  setAttachments: (attachments: AttachmentParams[]) => this;
   setMentionUserIds: (userIds: string[]) => this;
   setParentMessageId: (messageId: string) => this;
   setReplyInThread: () => this;
@@ -546,7 +544,7 @@ declare class ChannelListener {
 }
 
 declare class ConnectionListener {
-  onConnectionStatusChanged: (status: string) => void;
+  onConnectionStatusChanged: (status: ConnectionState) => void;
   onTokenWillExpire: (timeInterval: number) => void;
   onTokenExpired: () => void;
 }
@@ -573,7 +571,7 @@ interface Member extends User {
 interface Message {
   id: string;
   tid?: number;
-  text: string;
+  body: string;
   type: string;
   metadata?: string;
   createdAt: Date | number;
@@ -677,8 +675,8 @@ interface GroupChannel extends Channel {
   createMemberBuilder: (id: string) => MemberBuilder;
 
   changeOwner: (newOwnerId: string) => Promise<Member[]>;
-  changeMembersRole: (members: IMemberParams[]) => Promise<Member[]>;
-  addMembers: (members: IMemberParams[]) => Promise<Member[]>;
+  changeMembersRole: (members: MemberParams[]) => Promise<Member[]>;
+  addMembers: (members: MemberParams[]) => Promise<Member[]>;
   kickMembers: (memberIds: string[]) => Promise<Member[]>;
   blockMembers: (memberIds: string[]) => Promise<Member[]>;
   unBlockMembers: (memberIds: string[]) => Promise<Member[]>;
@@ -691,19 +689,19 @@ interface DirectChannel extends Channel {
   peer: Member;
   label?: string;
   metadata?: string;
-  update: (channelConfig: IDirectChannelConfig) => Promise<DirectChannel>;
-  create(channelData: ICreateDirectChannel): Promise<DirectChannel>;
+  update: (channelConfig: DirectChannelConfig) => Promise<DirectChannel>;
+  create(channelData: CreateDirectChannel): Promise<DirectChannel>;
 }
 
 interface PrivateChannel extends GroupChannel {
-  update: (channelConfig: IPrivateChannelConfig) => Promise<PrivateChannel>;
-  create(channelData: ICreatePrivateChannel): Promise<PrivateChannel>;
+  update: (channelConfig: PrivateChannelConfig) => Promise<PrivateChannel>;
+  create(channelData: CreatePrivateChannel): Promise<PrivateChannel>;
 }
 
 interface PublicChannel extends GroupChannel {
   uri: string;
-  update: (channelConfig: IPublicChannelConfig) => Promise<PublicChannel>;
-  create(channelData: ICreatePublicChannel): Promise<PublicChannel>;
+  update: (channelConfig: PublicChannelConfig) => Promise<PublicChannel>;
+  create(channelData: CreatePublicChannel): Promise<PublicChannel>;
   join: () => Promise<Member>;
 }
 
