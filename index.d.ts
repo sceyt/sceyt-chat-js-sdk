@@ -1,6 +1,6 @@
 export default SceytChat;
 
-declare interface SceytChat {
+declare class SceytChat {
   readonly user: User;
   connectionState: ConnectionState;
   readonly settings: Settings
@@ -11,6 +11,7 @@ declare interface SceytChat {
   apiUrl: string;
   accessToken: string;
   enableAutoSendMessageStatusDelivered: boolean;
+  consecutiveFailures: number;
 
   constructor(apiUrl: string, appId: string, clientId: string, requestTimeout?: number);
 
@@ -35,7 +36,6 @@ declare interface SceytChat {
   getRoles: () => Promise<string[]>;
   getChannel: (id: string) => Promise<Channel>;
   getTotalUnreads: () => Promise<{ totalUnread: number, unreadChannels: number }>;
-  consecutiveFailures: number;
   channelReport: (report: string, channelId: string, description?: string, messageIds?: string[]) => Promise<void>;
   messageReport: (report: string, channelId: string, messageIds: string[], description?: string) => Promise<void>;
   userReport: (report: string, userId: string, messageIds?: string[], description?: string) => Promise<void>;
