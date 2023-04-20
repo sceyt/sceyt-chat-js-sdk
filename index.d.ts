@@ -39,6 +39,9 @@ declare class SceytChat {
   messageReport: (report: string, channelId: string, messageIds: string[], description?: string) => Promise<void>;
   userReport: (report: string, userId: string, messageIds?: string[], description?: string) => Promise<void>;
   setPresence: (state: UserPresenceState, status?: string) => Promise<void>;
+  getAllContacts: () => Promise<Contact[]>;
+  addContactDiscoveries: (contactDiscoveries: ContactDiscovery[]) => Promise<ContactDiscovery[]>;
+  deleteAllContactDiscoveries: () => Promise<void>;
 
   PublicChannel(): PublicChannel;
   PrivateChannel(): PrivateChannel;
@@ -110,6 +113,15 @@ declare interface User {
     lastActiveAt: Date
   };
   activityState: 'Active' | 'Inactive' | "Deleted"
+}
+
+declare interface Contact {
+  id: string
+  firstName?: string;
+  lastName?: string;
+  metadata?: string;
+  keys: any[];
+  user: User;
 }
 
 interface Channel {
@@ -626,6 +638,12 @@ export interface Settings {
 export declare type UploadProgress = (progressPercent: number) => void;
 export declare type UploadCompletion = (attachment: Attachment, err: SceytChatError) => void;
 
+interface ContactDiscovery {
+  key: string
+  firstName?: string;
+  lastName?: string
+  metadata?: string
+}
 interface MemberParams {
   role: string;
   id: string;
