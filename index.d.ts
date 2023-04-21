@@ -2,18 +2,17 @@ export default SceytChat;
 
 declare class SceytChat {
   readonly user: User;
-  connectionState: ConnectionState;
+  readonly connectionState: ConnectionState;
   readonly settings: Settings
-  requestTimeout: number;
-  appId: string;
-  authToken: string;
-  clientId: string;
-  apiUrl: string;
-  accessToken: string;
+  readonly requestTimeout: number;
+  readonly apiUrl: string;
+  readonly appId: string;
+  readonly accessToken: string;
+  readonly clientId: string;
   enableAutoSendMessageStatusDelivered: boolean;
   consecutiveFailures: number;
-  channelListeners: ChannelListener;
-  connectionListeners: ConnectionListener;
+  channelListeners: {[key: string]: ChannelListener};
+  connectionListeners: {[key: string]: ChannelListener};
 
   constructor(apiUrl: string, appId: string, clientId: string, requestTimeout?: number);
 
