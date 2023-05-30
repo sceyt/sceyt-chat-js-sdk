@@ -1,6 +1,6 @@
 {
   "name": "sceyt-chat",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "JavaScript SDK for integrating Sceyt Chat API into your web applications.",
   "author": "Sceyt <support@sceyt.com>",
   "main": "index.js",
@@ -27,7 +27,9 @@
     "loglevel-plugin-prefix": "^0.8.4",
     "long": "^4.0.0",
     "protobufjs": "~6.9.0",
-    "uuidv4": "^6.2.6"
+    "uuidv4": "^6.2.6",
+    "isomorphic-ws": "^5.0.0",
+    "ws": "^8.13.0"
   },
   "license" : "SEE LICENSE IN LICENSE.txt",
   "homepage": "https://sceyt.com"
