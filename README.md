@@ -90,11 +90,12 @@ const members = [
 ]
 
 const params = {
+    type: 'group',
     subject: 'Marketing Group',
     members
 }
 
-const marketingGroup = await sceytClient.PrivateChannel.create(params);
+const marketingGroup = await sceytClient.Channel.create(params);
 
 // Create a message builder to construct a message object for sending
 const messageBuilder = marketingGroup.createMessageBuilder();
