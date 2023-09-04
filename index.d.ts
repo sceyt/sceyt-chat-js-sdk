@@ -720,4 +720,6 @@ type UserPresenceState = 'offline' | 'online' | 'invisible' | 'away' | 'dnd'
 interface SceytChatError extends Error{
   message: string,
   code: number
+  type?: string,
+  traceId?: string
 }
