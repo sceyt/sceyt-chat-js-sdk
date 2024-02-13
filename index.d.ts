@@ -96,6 +96,9 @@ declare class ChannelListener {
   onReactionDeleted: (channel: Channel, user: User, message: Message, reaction: Reaction) => void;
   onMemberStartedTyping: (channel: Channel, member: Member) => void;
   onMemberStoppedTyping: (channel: Channel, member: Member) => void;
+  onReceivedChannelEvent:(channelId: string, name: string, user: User) => void;
+  onChannelFrozen:(channel: Channel) => void;
+  onChannelUnfrozen:(channel: Channel) => void;
 }
 
 declare interface User {
@@ -144,6 +147,8 @@ interface Channel {
   archived: boolean
   muted: boolean;
   mutedTill: Date | null;
+  frozen: boolean;
+  frozenTill: Date | null;
   pinnedAt: Date | null;
   lastReceivedMsgId: string;
   lastDisplayedMsgId: string;
@@ -154,16 +159,20 @@ interface Channel {
   newReactions: Reaction[];
   delete: () => Promise<void>;
   deleteAllMessages: (forEveryone?: boolean) => Promise<void>;
+  setMessageRetentionPeriod: (period: number) => Promise<Channel>;
   hide: () => Promise<void>;
   unhide: () => Promise<void>;
   markAsUnRead: () => Promise<Channel>;
   markAsRead: () => Promise<Channel>;
   mute: (muteExpireTime: number) => Promise<Channel>;
   unmute: () => Promise<Channel>;
+  freeze: (muteExpireTime: number) => Promise<Channel>;
+  unfreeze: () => Promise<Channel>;
   markMessagesAsReceived: (messageIds: string[]) => Promise<MessageListMarker>;
   markMessagesAsDisplayed: (messageIds: string[]) => Promise<MessageListMarker>;
   startTyping: () => void;
   stopTyping: () => void;
+  sendEvent: (eventName: string) => void;
   sendMessage: (message: Message) => Promise<Message>;
   editMessage: (message: Message) => Promise<Message>;
   reSendMessage: (failedMessage: Message) => Promise<Message>;
@@ -202,6 +211,13 @@ interface Member extends User {
   role: string;
 }
 
+interface BodyAttribute {
+  type: string;
+  metadata: string;
+  offset: number;
+  length: number;
+}
+
 interface Message {
   id: string;
   tid?: number;
@@ -221,6 +237,7 @@ interface Message {
   userReactions: Reaction[];
   markerTotals?: MarkerTotal[];
   userMarkers:  Marker[];
+  bodyAttributes: BodyAttribute[] | []
   forwardingDetails?: {
     channelId: string
     hops: number
@@ -338,20 +355,13 @@ interface BlockedUserListQuery {
 }
 
 declare class ChannelListQueryBuilder extends QueryBuilder {
-  type: (type: string[]) => this
+  query: (query: string) => this
+  types: (types: string[]) => this
   limit: (count: number) => this;
-  sortByLastMessage: () => this;
-  sortByCreationDate: () => this;
-  uriBeginsWith: (word: string) => this;
-  uriEquals: (word: string) => this;
-  uriContains: (word: string) => this;
-  subjectBeginsWith: (word: string) => this;
-  subjectEquals: (word: string) => this;
-  subjectContains: (word: string) => this;
-  userBeginsWith: (word: string) => this;
-  userEquals: (word: string) => this;
-  userContains: (word: string) => this;
-  labelEquals: (word: string) => this;
+  offset: (offset: number) => this;
+  order: (orderBy: 'lastMessage' | 'createdAt') => this;
+  filterKey: (keys: ('subject' | 'uri' | 'state' | 'cratedAt')[]) => this;
+  searchOperator: (operator: 'contains' | 'beginsWith' | 'equal' | 'lowerThan' | 'lowerThanOrEqual' | 'greaterThan' | 'greaterThanOrEqual' | 'between') => this;
   build: () => ChannelListQuery;
 }
 
