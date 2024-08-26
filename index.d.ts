@@ -71,7 +71,14 @@ declare class ChannelListener {
   onUpdated: (channel: Channel) => void;
   onDeleted: (channelId: string) => void;
   onReceivedMessageListMarker: (channelId: string, markers: MessageListMarker[]) => void;
-  onTotalUnreadCountUpdated: (channel: Channel, totalUnreadChannelCount: number, totalUnreadMessageCount: number, channelUnreadMessageCount: number, channelUnreadMentionCount, channelUnreadReactionCount) => void;
+  onTotalUnreadCountUpdated: (
+    totalUnreadChannelCount: number,
+    totalUnreadMessageCount: number,
+    channel?: Channel,
+    channelUnreadMessageCount?: number,
+    channelUnreadMentionCount?: number,
+    channelUnreadReactionCount?: number
+  ) => void;
   onHidden: (channel: Channel) => void;
   onShown: (channel: Channel) => void;
   onMuted: (channel: Channel) => void;
@@ -81,6 +88,8 @@ declare class ChannelListener {
   onHistoryCleared: (channel: Channel) => void;
   onDeletedAllMessages: (channel: Channel) => void;
   onMarkedAsUnread: (channel: Channel) => void;
+  onPined: (channel: Channel) => void;
+  onUnpined: (channel: Channel) => void;
   onOwnerChanged: (channel: Channel, newOwner: Member, oldOwner: Member) => void;
   onMemberJoined: (channel: Channel, member: Member) => void;
   onMembersAdded: (channel: Channel, members: Member[]) => void;
