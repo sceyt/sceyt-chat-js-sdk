@@ -1,6 +1,6 @@
 {
   "name": "sceyt-chat",
-  "version": "1.6.1-beta.7",
+  "version": "1.6.1-beta.8",
   "description": "JavaScript SDK for integrating Sceyt Chat API into your web applications.",
   "author": "Sceyt <support@sceyt.com>",
   "main": "index.js",
