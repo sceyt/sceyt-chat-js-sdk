@@ -2041,11 +2041,11 @@ declare class SceytChat {
 	/**
 	 * Updates the current user's presence state and optional status text.
 	 *
-	 * @param state - One of `'Online'`, `'Offline'`, `'Away'`, `'Invisible'`, or `'DND'`
+	 * @param state - One of `'online'`, `'offline'`, `'away'`, `'invisible'`, or `'dnd'`
 	 * @param status - Optional human-readable status message (e.g. `"In a meeting"`)
 	 * @returns A promise that resolves when the presence has been updated
 	 */
-	setPresence: (state: "Offline" | "Online" | "Invisible" | "Away" | "DND", status?: string) => Promise<void>;
+	setPresence: (state: "offline" | "online" | "invisible" | "away" | "dnd", status?: string) => Promise<void>;
 	/**
 	 * Retrieves the total unread message and channel counts across all channels.
 	 *
