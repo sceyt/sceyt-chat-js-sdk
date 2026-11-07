@@ -1561,13 +1561,110 @@ declare class MentionsListQueryBuilder extends QueryBuilder {
 	build: () => Promise<MentionsQuery>;
 }
 /**
- * Decrypts stored bytes that arrive in pieces. Call {@link push} for each
- * piece, in order, and {@link finish} when the response ends. A whole stored
- * file starts with its key commitment and header, which are checked before
- * any segment is decrypted. A segment is held back until more bytes arrive,
- * because only the end of the data tells which segment is the last one.
+ * Encrypts a stream given in pieces, as the native SDK's EncryptingStream (and Tink's
+ * StreamingAead): {@link write} the plaintext in pieces of any size, e.g. 5 MB upload
+ * parts, then {@link close} once. The output of all the calls, joined, is what
+ * the cipher's random-access view gives for the same plaintext. Calls run one after another, in the order made.
  */
-export declare class AttachmentDecryptor {
+export declare class EncryptingStream {
+	private readonly cipher;
+	private buffer;
+	private queue;
+	private closed;
+	private _position;
+	private _ciphertextPosition;
+	private index;
+	private headerWritten;
+	/** The plaintext bytes written so far. */
+	get position(): number;
+	/** The encrypted bytes returned so far (by a restored stream: before it too). */
+	get ciphertextPosition(): number;
+	/**
+	 * The encrypted bytes `plaintext` completes: the prefix on the first call, then whole
+	 * 64 KiB segments. As in Tink, the last segment of the plaintext so far stays buffered:
+	 * it is the last one if close() follows. After an error the stream is unusable.
+	 */
+	write(plaintext: Uint8Array): Promise<Uint8Array>;
+	/** The rest, sealed as the last segment. Later calls fail with Closed. With a size in the info, InvalidArgument if the plaintext written isn't that size. */
+	close(): Promise<Uint8Array>;
+	private header;
+	private output;
+	private fail;
+	private enqueue;
+}
+/**
+ * Decrypts a stream given in pieces, as the native SDK's DecryptingStream (and Tink's
+ * StreamingAead): {@link write} the stored bytes in pieces of any size, then {@link close}
+ * once. Each segment's plaintext is given once it verifies; close() verifies the last one,
+ * so a truncated stream fails there. After an error, discard all the plaintext the stream
+ * gave: it didn't verify as a whole. Calls run one after another, in the order made.
+ */
+export declare class DecryptingStream {
+	private readonly decryptor;
+	private readonly storedSize?;
+	private readonly expectedHeader?;
+	private queue;
+	private closed;
+	private _position;
+	/** The stored bytes written so far. */
+	get position(): number;
+	/** The plaintext of the segments `ciphertext` completes. As in Tink, a segment is decrypted only once more bytes follow it: until then it may be the last. */
+	write(ciphertext: Uint8Array): Promise<Uint8Array>;
+	/** The last segment's plaintext. Authentication if the stream was truncated or doesn't verify. Later calls fail with Closed. */
+	close(): Promise<Uint8Array>;
+	private verified;
+	private sizeError;
+	private fail;
+	private enqueue;
+}
+declare class SceytChatError extends Error {
+	/** Optional error category that groups related error conditions (e.g. `'NetworkError'`). */
+	type?: string;
+	/** Numeric error code returned by the server or SDK identifying the specific error. */
+	code?: number;
+	/** Optional trace ID that can be shared with support to correlate server-side logs. */
+	traceId?: string;
+	/**
+	 * Construct a SceytChatError.
+	 *
+	 * @param message - Human-readable description of what went wrong
+	 * @param code - Numeric error code identifying the specific error condition
+	 * @param type - Optional error category string for grouping related errors
+	 * @param traceId - Optional trace ID for correlating the error with server-side diagnostics
+	 */
+	constructor(message: string, code?: number, type?: string, traceId?: string);
+}
+/** Why a file-encryption call failed: the `type` of the SceytChatError it rejects with. */
+export declare const FileEncryptionErrorCode: {
+	/** E.g. a missing or wrong unique id, or no source. */
+	readonly InvalidArgument: "InvalidArgument";
+	/** A range outside the object or the plaintext. */
+	readonly OutOfRange: "OutOfRange";
+	/** Malformed or unsupported encryption info, checkpoint or metadata. */
+	readonly InvalidEncryption: "InvalidEncryption";
+	/** The file isn't the one the upload started with: start a new upload. */
+	readonly FileChanged: "FileChanged";
+	/** The encrypted bytes didn't verify: tampered, truncated, wrong key or id. */
+	readonly Authentication: "Authentication";
+	/** A file or the source couldn't be read. */
+	readonly IO: "IO";
+	/** The caller asked to stop. */
+	readonly Interrupted: "Interrupted";
+	/** The object was closed. */
+	readonly Closed: "Closed";
+};
+/** Local state to restore an upload session; never message metadata. */
+interface IFileEncryptionCheckpoint {
+	cipher: AttachmentCipher;
+	/** Opaque JSON v1: file size/time and per-range hashes. No key or header. */
+	data: string;
+}
+/** A stable byte source. Reads use offset and length, not an exclusive end. */
+interface IRandomAccessSource {
+	readonly size: number;
+	read(offset: number, length: number): Promise<Uint8Array>;
+}
+declare class AttachmentDecryptor {
 	private readonly cipher;
 	private pending;
 	private nextSegment;
@@ -1579,7 +1676,7 @@ export declare class AttachmentDecryptor {
 	 * its commitment. With it the data starts at that segment, after the header,
 	 * which the caller has checked.
 	 */
-	constructor(cipher: AttachmentCipher, firstSegment?: number);
+	constructor(cipher: AttachmentCipherEngine, firstSegment?: number);
 	/** Index of the next segment to decrypt; whole segments before it are done. */
 	get segmentsDone(): number;
 	/** Add stored bytes. Resolves with the plaintext of every segment it completed (possibly empty). */
@@ -1590,18 +1687,12 @@ export declare class AttachmentDecryptor {
 	private decryptReady;
 	private enqueue;
 }
-/** Another file of the same attachment (a video's preview image), encrypted with its own id and key. */
 interface IAttachmentRendition {
 	/** "thumbnail" for a video's preview image. */
 	role: string;
 	attachmentId: string;
 	key: string;
 }
-/**
- * The `enc` object kept in an encrypted attachment's metadata. The cipher
- * makes `v`, `alg`, `attachmentId` and `key`; the app adds `renditions`. The
- * file's URL, size, type and name are the attachment's own fields.
- */
 interface IAttachmentEncryption {
 	/** Envelope version, always 1. */
 	v: 1;
@@ -1613,7 +1704,6 @@ interface IAttachmentEncryption {
 	key: string;
 	renditions?: IAttachmentRendition[];
 }
-/** Where a plaintext byte range lies in the stored file. */
 interface IAttachmentSegmentRange {
 	/** First segment that holds the range. */
 	firstSegment: number;
@@ -1625,23 +1715,10 @@ interface IAttachmentSegmentRange {
 	end: number;
 	/** Bytes to skip at the start of the first decrypted segment. */
 	skip: number;
-	/** The range reaches the file's last segment: pass it as `isEnd` to {@link AttachmentCipher.decryptSlice}. */
+	/** The range reaches the file's last segment: pass it as `isEnd` to {@link AttachmentCipherEngine.decryptSlice}. */
 	isEnd: boolean;
 }
-/**
- * Encrypts and decrypts one attachment's bytes. Create one with
- * {@link AttachmentCipher.create} for each file you upload, store its
- * {@link AttachmentCipher.metadata} in the attachment's metadata as `enc`, and
- * rebuild it on the receiving side with {@link AttachmentCipher.fromMetadata}.
- *
- * A receiving cipher learns the file's salt and nonce prefix from its stored
- * header: check that first with {@link checkCommitment} (reads from the start
- * of the file do it themselves).
- *
- * Never use one cipher for two different files, or for a file whose content
- * changed: the same key and nonce must never seal different bytes.
- */
-export declare class AttachmentCipher {
+declare class AttachmentCipherEngine {
 	/** Envelope version (`enc.v`) this class writes and reads. */
 	static readonly VERSION = 1;
 	/** The format it writes and reads (`enc.alg`). */
@@ -1657,27 +1734,43 @@ export declare class AttachmentCipher {
 	private readonly context;
 	private tinkHeader?;
 	private segmentKeys?;
+	private commitmentKey?;
 	private commitmentChecked;
 	private constructor();
 	/**
 	 * A cipher with a new random key, salt and nonce prefix, for one new file.
 	 * Its attachment id is 16 new random bytes unless `id` (base64url) is given (e.g. in tests).
 	 */
-	static create(id?: string): Promise<AttachmentCipher>;
+	static create(id?: string): Promise<AttachmentCipherEngine>;
+	/**
+	 * The cipher of a stored file whose salt and nonce prefix are known (e.g. a
+	 * saved upload): it encrypts to the same bytes as the cipher that made them.
+	 */
+	static fromParameters(enc: unknown, salt: Uint8Array, noncePrefix: Uint8Array): AttachmentCipherEngine;
 	/** The cipher described by an attachment's `metadata.enc`. Throws if `enc` is not a valid v1 envelope of this format. */
-	static fromMetadata(enc: unknown): AttachmentCipher;
+	static fromMetadata(enc: unknown): AttachmentCipherEngine;
 	/** The `enc` object to store in the attachment's metadata (its crypto fields). It contains the key. */
 	get metadata(): IAttachmentEncryption;
+	/** The file's salt and nonce prefix, once its header is known. */
+	get parameters(): {
+		salt: Uint8Array;
+		noncePrefix: Uint8Array;
+	} | undefined;
 	/** Number of segments a file of this many plaintext bytes has (1 for an empty file). */
 	segmentCount(plainSize: number): number;
+	static segmentCountOf(plainSize: number): number;
 	/** The plaintext byte segment `index` starts at. */
 	plainSegmentStart(index: number): number;
 	/** The stored byte segment `index` starts at. */
 	storedSegmentStart(index: number): number;
 	/** Size of the stored file: the commitment, the header and the segments. */
 	storedSize(plainSize: number): number;
+	/** Size of the stored file of a `plainSize`-byte file. */
+	static storedSizeOf(plainSize: number): number;
 	/** Size of the plaintext of a stored file, or -1 if no valid file has this size. */
 	plainSize(storedSize: number): number;
+	/** Size of the plaintext of a stored file, or -1 if no valid file has this size. */
+	static plainSizeOf(storedSize: number): number;
 	/**
 	 * Where plaintext bytes `plainStart`..`plainEnd` (inclusive) lie in a file of
 	 * `plainSize` bytes: the stored bytes of their segments to request (after the
@@ -1751,19 +1844,68 @@ export declare class AttachmentCipher {
 	private gcm;
 	private emptySegmentTag;
 }
-/** Options for {@link AttachmentUploadFile.create}. */
-interface IAttachmentUploadOptions {
-	/** Encrypt the file (spec/attachment-encryption) with a new key and attachment id. Default false. */
-	encrypt?: boolean;
-	/** Stored bytes per part, as the upload server gives it; default 5 MiB (S3's smallest multipart part). */
-	partSize?: number;
-	/** Encrypt with this cipher instead of a new one (e.g. in tests). Implies `encrypt`. */
-	cipher?: AttachmentCipher;
+declare class DecryptingRandomAccessStream implements IRandomAccessSource {
+	private readonly source;
+	private readonly engine;
+	readonly size: number;
+	private closed;
+	private reader?;
+	private queue;
+	/** Verify the header and empty final segment before making a reader available. */
+	static open(source: IRandomAccessSource, engine: AttachmentCipherEngine): Promise<DecryptingRandomAccessStream>;
+	read(offset: number, length: number): Promise<Uint8Array>;
+	private readRange;
+	private open;
+	close(): void;
 }
-/** Options for {@link SceytChat.upload}. */
+declare class EncryptingRandomAccessStream implements IRandomAccessSource {
+	private readonly source;
+	private readonly engine;
+	readonly size: number;
+	private closed;
+	private readonly plainSize;
+	private readonly hashes;
+	read(offset: number, length: number): Promise<Uint8Array>;
+	close(): void;
+}
+/** One immutable attachment's key and header. Never encrypt another plaintext with it. */
+export declare class AttachmentCipher {
+	private readonly engine;
+	private readonly storedHeader;
+	static readonly attachmentKeyVersion = 1;
+	static readonly attachmentIdSize = 16;
+	static readonly headerSize: number;
+	private constructor();
+	/** Fresh encryption for a 16-byte attachment ID from the slot service or FileEncryption.newAttachmentId. */
+	static create(attachmentId: Uint8Array): Promise<AttachmentCipher>;
+	/** Verify the key commitment before returning the restored cipher. */
+	static restore(attachmentKey: string, header: Uint8Array): Promise<AttachmentCipher>;
+	get attachmentKey(): string;
+	get header(): Uint8Array;
+	toString(): string;
+	newEncryptingStream(): EncryptingStream;
+	newDecryptingStream(): DecryptingStream;
+	newEncryptingRandomAccessStream(source: IRandomAccessSource): EncryptingRandomAccessStream;
+	newDecryptingRandomAccessStream(source: IRandomAccessSource): Promise<DecryptingRandomAccessStream>;
+}
+/** One prepared file, read through its cipher's random-access view with per-range guards. */
+export declare class PreparedUpload {
+	readonly cipher: AttachmentCipher;
+	readonly sourceId: string;
+	private readonly stamp;
+	private readonly parts;
+	private readonly encrypted;
+	readonly ciphertextSize: number;
+	readonly plaintextSize: number;
+	readonly fileName: string;
+	private closed;
+	private constructor();
+	checkpoint(): IFileEncryptionCheckpoint;
+	readCiphertextRange(offset: number, length: number): Promise<Uint8Array>;
+	close(): void;
+}
+/** Options for {@link SceytChat.upload} and {@link SceytChat.uploadEncrypted}. */
 interface IUploadOptions {
-	/** Encrypt the file (spec/attachment-encryption) with a new key and attachment id. Default false. */
-	encrypt?: boolean;
 	/** Called as the file is sent, with bytes of the stored file sent so far and in all. */
 	progress?: (loaded: number, total: number) => void;
 	/** Cancels the upload: it then rejects with an error named "AbortError". */
@@ -1775,147 +1917,26 @@ interface IUploadResult {
 	url: string;
 	/** The file's own size, also when it is stored encrypted: the attachment's size. */
 	size: number;
-	/** Only when the file is encrypted: put it in the attachment's metadata as `enc`. */
-	encryption?: IAttachmentEncryption;
 }
-/**
- * A file prepared for upload. An uploader sends `getAll()` in one request, or
- * the parts of a multipart upload, and stores them as `contentType`. Part n is
- * the stored bytes `(n − 1) × partSize` up to `n × partSize` (the last part is
- * smaller): `getPart(n)`, or `getRange(start, end)` for any other cut, e.g. one
- * the upload server gives. Ranges can be read in any order, several at once.
- * They come read and, when the file is encrypted, encrypted, so the uploader
- * needs to know nothing about the format. The same range always has the same
- * bytes, so a failed part can simply be sent again.
- *
- * When the file is encrypted, put {@link encryption} in the attachment's
- * metadata as `enc`: it holds the attachment id and key the recipients need.
- */
-export declare class AttachmentUploadFile {
-	/** Default stored bytes per part (5 MiB). */
-	static readonly DEFAULT_PART_SIZE: number;
-	/** The file as the user picked it. */
-	readonly source: Blob;
-	/** Stored bytes per part (the last part is smaller). */
-	readonly partSize: number;
-	/** Number of parts; at least 1, also for an empty file. */
-	readonly partCount: number;
-	/** Bytes that will be stored: the commitment, header and encrypted segments when the file is encrypted. */
-	readonly size: number;
-	/** Type to store the file with: application/octet-stream when it is encrypted. */
-	readonly contentType: string;
-	private readonly cipher?;
-	private constructor();
-	/** Prepares `source` for upload, with a new key and attachment id when `encrypt` is set. */
-	static create(source: Blob, options?: IAttachmentUploadOptions): Promise<AttachmentUploadFile>;
-	/** The `enc` object for the attachment metadata, or undefined when the file is not encrypted. */
-	get encryption(): IAttachmentEncryption | undefined;
-	/** Part `partNumber` (1 to `partCount`, as S3 numbers parts), ready to send. */
-	getPart(partNumber: number): Promise<Uint8Array>;
-	/** The stored bytes from `start` up to (not including) `end`, ready to send. */
-	getRange(start: number, end: number): Promise<Uint8Array>;
-	/** The whole file, ready to send in one request. */
-	getAll(): Promise<Blob>;
-}
-/** Options for {@link AttachmentDownloadFile.create}. */
-interface IAttachmentDownloadOptions {
-	/** The attachment's metadata, as a JSON string or an object; its `enc` says whether and how the file is encrypted. */
-	metadata?: unknown;
-	/** The file's real type (e.g. 'video/mp4'), given to what {@link AttachmentDownloadFile.open} returns. */
-	type?: string;
-}
-/** Stored bytes to request for a plaintext range, see {@link AttachmentDownloadFile.rangeFor}. */
-interface IAttachmentStoredRange {
-	/** First stored byte to request (inclusive). */
-	start: number;
-	/** Last stored byte to request (inclusive). */
-	end: number;
-}
-/** Where a download can continue from, see {@link AttachmentDownloadFile.resumeFrom}. */
-interface IAttachmentResumePoint {
-	/** How many of the bytes received so far to keep. */
-	keep: number;
-	/** First stored byte to request next (equal to `keep`). */
-	rangeStart: number;
-}
-/**
- * A stored attachment file, for a downloader. The downloader fetches the stored
- * bytes as it always does and passes them to {@link open}, which gives back the
- * file to show or save: decrypted when the attachment is encrypted, and with its
- * real type. It needs to know nothing about the format.
- *
- * For partial reads (resuming, seeking, playing while downloading) it also says
- * which stored bytes to request: {@link resumeFrom}, {@link rangeFor},
- * {@link openRange} and {@link openStream}. An encrypted file's first 72 stored
- * bytes are its key commitment and header, checked before anything is
- * decrypted: reads from the start of the file check them themselves; a read
- * that starts later needs {@link checkCommitment} first.
- */
-export declare class AttachmentDownloadFile {
-	/** The file's real type, or '' when unknown. */
-	readonly type: string;
-	private readonly cipher?;
-	private constructor();
-	/**
-	 * The download file of an attachment. Throws a SceytChatError when the
-	 * metadata has an `enc` object that is not valid: such a file can't be read.
-	 */
-	static create(options?: IAttachmentDownloadOptions): AttachmentDownloadFile;
-	/** Whether the stored bytes are encrypted. */
-	get isEncrypted(): boolean;
-	/**
-	 * Check an encrypted file's key commitment and header: its first 72 stored
-	 * bytes (`Range: bytes=0-71`), or more bytes from the start. Needed once
-	 * before a read that does not start at the beginning of the file. Rejects if
-	 * the file was not encrypted with this attachment's key and attachment id.
-	 * Resolves at once for a file that is not encrypted.
-	 */
-	checkCommitment(stored: Uint8Array): Promise<void>;
-	/**
-	 * The file from all of its stored bytes: decrypted when encrypted (rejects if
-	 * any byte was changed, the file is incomplete or it belongs to another key),
-	 * with {@link type} when known.
-	 */
-	open(stored: Blob): Promise<Blob>;
-	/**
-	 * A TransformStream from stored bytes, from `rangeStart` (see
-	 * {@link resumeFrom}) to the end of the file, to the file's bytes. It errors
-	 * if the stored bytes were changed or end early. An encrypted stream from 0
-	 * checks the commitment itself; one from later needs {@link checkCommitment} first.
-	 */
-	openStream(rangeStart?: number): TransformStream<Uint8Array, Uint8Array>;
-	/**
-	 * After `received` stored bytes of an interrupted download: how many of them
-	 * to keep, and where to ask for the rest. An encrypted file keeps its
-	 * header and whole segments, so its stream can be opened there (after
-	 * {@link checkCommitment} with the kept bytes, if this file has not checked
-	 * it). Before the end of segment 0 nothing is kept.
-	 */
-	resumeFrom(received: number): IAttachmentResumePoint;
-	/**
-	 * The stored bytes to request for the file's bytes `start` to `end`
-	 * (inclusive), in a file of `size` bytes (the attachment's size). A range in
-	 * an encrypted file's first segment starts at byte 0, so it brings the header.
-	 */
-	rangeFor(start: number, end: number, size: number): IAttachmentStoredRange;
-	/**
-	 * The file's bytes `start` to `end` (inclusive) from the stored bytes
-	 * requested with {@link rangeFor} for the same arguments. A range after the
-	 * first segment needs {@link checkCommitment} first.
-	 */
-	openRange(stored: Uint8Array, start: number, end: number, size: number): Promise<Uint8Array>;
-	private requireCommitment;
+/** An encrypted upload also returns the cipher recipients need. */
+interface IEncryptedUploadResult extends IUploadResult {
+	cipher: AttachmentCipher;
 }
 /** Options for {@link SceytChat.download}. */
 interface IDownloadOptions {
-	/** The attachment's metadata, as a JSON string or an object; its `enc` says whether and how the file is encrypted. */
-	metadata?: unknown;
-	/** The file's real type (e.g. 'video/mp4'), given to the downloaded file. */
+	/** The file's type (e.g. 'video/mp4'), given to the downloaded Blob. */
 	type?: string;
-	/** Called as the file arrives, with stored bytes received so far and in all (undefined when the server does not say). */
+	/** Called as the file arrives, with bytes received so far and in all (undefined when the server does not say). */
 	progress?: (loaded: number, total?: number) => void;
 	/** Cancels the download: it then rejects with an error named "AbortError". */
 	signal?: AbortSignal;
+}
+/** The native attachment contract: file preparation/restoration and raw attachment IDs. */
+export declare class FileEncryption {
+	static readonly format = "tink-aes256-gcm-hkdf-64k+commit-v1";
+	static newAttachmentId(): Uint8Array;
+	static prepareUpload(file: Blob, attachmentId: Uint8Array): Promise<PreparedUpload>;
+	static restoreUpload(file: Blob, checkpoint: IFileEncryptionCheckpoint): Promise<PreparedUpload>;
 }
 declare class SceytChat {
 	private _user;
@@ -2072,43 +2093,55 @@ declare class SceytChat {
 	 */
 	updateToken: (accessToken: string) => Promise<unknown>;
 	/**
-	 * Stores a file in the Sceyt file storage, encrypted when `encrypt` is set. Send
-	 * it as an attachment with `setUpload(false)`: its `url`, its `size`, and when it
-	 * is encrypted its `encryption` in the metadata as `enc`.
+	 * Stores a file in the Sceyt file storage as it is. Send it as an attachment
+	 * with `setUpload(false)`: its `url` and its `size`.
 	 *
 	 * @param file - The file to upload
-	 * @param options - `encrypt`, `progress` (stored bytes sent and in all) and `signal` to cancel
+	 * @param options - `progress` (bytes sent and in all) and `signal` to cancel
 	 * @returns A promise that resolves with the stored file; it rejects with an error
 	 * named "AbortError" when cancelled, or a SceytChatError
 	 * @example
 	 * ```typescript
-	 * const { url, size, encryption } = await sceytChat.upload(file, { encrypt: true });
-	 * const attachment = new AttachmentBuilder(url, 'file')
-	 *     .setName(file.name).setFileSize(size).setUpload(false)
-	 *     .setMetadata(JSON.stringify({ enc: encryption })).create();
+	 * const { url, size } = await sceytChat.upload(file);
+	 * const attachment = new AttachmentBuilder(url, 'file').setName(file.name).setFileSize(size).setUpload(false).create();
 	 * ```
 	 */
 	upload: (file: Blob, options?: IUploadOptions) => Promise<IUploadResult>;
 	/**
-	 * Downloads one attachment file and opens it: decrypted when its metadata has
-	 * `enc`, with its real type. A lost connection is resumed where it stopped.
+	 * Like {@link upload}, for the encrypted file `upload` makes
+	 * (FileEncryption.prepareUpload): its encrypted bytes are stored. Then put
+	 * `upload.cipher.attachmentKey` in the attachment's metadata.
+	 * Keep `upload` open until the upload ends.
 	 *
-	 * @param url - The attachment's URL (or a video's `video_thumb`)
-	 * @param options - `metadata` (the attachment's, or for a thumbnail `{ enc }` of
-	 * its rendition), `type`, `progress` (stored bytes received and in all) and `signal` to cancel
-	 * @returns A promise that resolves with the file; it rejects with an error named
-	 * "AbortError" when cancelled, or a SceytChatError: type "DownloadFailed" with the
-	 * HTTP status as its code, or "AttachmentDecryptionFailed" / "InvalidAttachmentEncryption"
+	 * @param upload - The prepared upload
+	 * @param options - `progress` (stored bytes sent and in all) and `signal` to cancel
+	 * @returns A promise that resolves with the stored file: its `url`, and as `size` the original file's
 	 * @example
 	 * ```typescript
-	 * const file = await sceytChat.download(attachment.url, { metadata: attachment.metadata, type: 'video/mp4' });
+	 * const upload = await FileEncryption.prepareUpload(file, FileEncryption.newAttachmentId());
+	 * const { url, size } = await sceytChat.uploadEncrypted(upload);
+	 * const metadata = JSON.stringify({ 'sceyt.enc': upload.cipher.attachmentKey });
 	 * ```
 	 */
+	uploadEncrypted: (upload: PreparedUpload, options?: IUploadOptions) => Promise<IEncryptedUploadResult>;
+	private store;
+	/**
+	 * Downloads a file as it is stored: an encrypted file stays encrypted, open it
+	 * with AttachmentCipher.restore and its decrypting view. A lost connection is resumed where it stopped.
+	 *
+	 * @param url - The file's URL
+	 * @param options - `type` (given to the Blob), `progress` (bytes received and in all) and `signal` to cancel
+	 * @returns A promise that resolves with the file; it rejects with an error named
+	 * "AbortError" when cancelled, or a SceytChatError of type "DownloadFailed" with the
+	 * HTTP status as its code
+	 */
 	download: (url: string, options?: IDownloadOptions) => Promise<Blob>;
+	/** Downloads and authenticates an encrypted attachment before returning its plaintext. */
+	downloadEncrypted: (url: string, attachmentKey: string, options?: IDownloadOptions) => Promise<Blob>;
 	/**
 	 * Uploads a file to the Sceyt file storage and returns its hosted URL.
 	 *
-	 * @deprecated Use {@link upload}: it can encrypt the file and be cancelled.
+	 * @deprecated Use {@link upload} (or {@link uploadEncrypted}): it can be cancelled.
 	 * @param file - An object containing the `File` to upload and a `progress` callback that receives upload percent
 	 * @returns A promise that resolves with the uploaded file's URL string
 	 * @example
@@ -2120,39 +2153,6 @@ declare class SceytChat {
 		data: File;
 		progress: (percent: number) => void;
 	}) => Promise<unknown>;
-	/**
-	 * Creates a cipher with a new random key and attachment id for one attachment
-	 * file. Store its `metadata` in the attachment's metadata as `enc`. See
-	 * spec/attachment-encryption/README.md.
-	 *
-	 * @returns A promise that resolves with the new cipher
-	 */
-	createAttachmentCipher: () => Promise<AttachmentCipher>;
-	/**
-	 * Returns the cipher for an encrypted attachment, from its metadata's `enc` object.
-	 *
-	 * @param enc - The `enc` object from the attachment's metadata
-	 * @returns The cipher; throws a SceytChatError if `enc` is not valid
-	 */
-	getAttachmentCipher: (enc: unknown) => AttachmentCipher;
-	/**
-	 * Prepares a file for upload: an uploader then sends `getAll()` in one request (or
-	 * `getPart(1)` … `getPart(partCount)` as multipart parts), encrypted when `encrypt` is set.
-	 * When it is encrypted, put the file's `encryption` in the attachment's metadata as `enc`.
-	 *
-	 * @param file - The file to upload
-	 * @param options - `encrypt` to encrypt it with a new key and attachment id; `partSize` (default 5 MiB)
-	 * @returns A promise that resolves with the prepared file
-	 */
-	prepareUpload: (file: Blob, options?: IAttachmentUploadOptions) => Promise<AttachmentUploadFile>;
-	/**
-	 * Prepares the download of an attachment's file: `open(storedBytes)` gives back
-	 * the file to show (decrypted when the attachment's metadata has `enc`).
-	 *
-	 * @param options - The attachment's `metadata` and the file's real `type`
-	 * @returns The download file; throws a SceytChatError if `enc` is not valid
-	 */
-	prepareDownload: (options: IAttachmentDownloadOptions) => AttachmentDownloadFile;
 	/**
 	 * Submits a report against a channel.
 	 *
@@ -2345,6 +2345,9 @@ declare class SceytChat {
 	 * @returns A promise that resolves when the exclusions have been reset
 	 */
 	resetPrivacySettingsExclusions: (privacyParameter: string) => Promise<any>;
+	/** Returns the {@link FileEncryption} class: attachment encryption for upload and download. */
+	get FileEncryption(): typeof FileEncryption;
+	get AttachmentCipher(): typeof AttachmentCipher;
 	/** Returns the {@link Channel} class for creating and managing channels. */
 	get Channel(): typeof Channel;
 	/** Returns the {@link ChannelListQueryBuilder} class for building channel list queries. */
@@ -2802,23 +2805,6 @@ declare class BlockedMemberListQueryBuilder extends QueryBuilder {
 	 * @throws {@link SceytChatError} If the query cannot be constructed
 	 */
 	build: () => BlockedMemberListQuery;
-}
-declare class SceytChatError extends Error {
-	/** Optional error category that groups related error conditions (e.g. `'NetworkError'`). */
-	type?: string;
-	/** Numeric error code returned by the server or SDK identifying the specific error. */
-	code?: number;
-	/** Optional trace ID that can be shared with support to correlate server-side logs. */
-	traceId?: string;
-	/**
-	 * Construct a SceytChatError.
-	 *
-	 * @param message - Human-readable description of what went wrong
-	 * @param code - Numeric error code identifying the specific error condition
-	 * @param type - Optional error category string for grouping related errors
-	 * @param traceId - Optional trace ID for correlating the error with server-side diagnostics
-	 */
-	constructor(message: string, code?: number, type?: string, traceId?: string);
 }
 declare class Attachment {
 	/** Unique attachment ID. */
@@ -3316,14 +3302,10 @@ export declare class PinnedMessageListQueryBuilder extends QueryBuilder {
 }
 
 export {
-	IAttachmentDownloadOptions as AttachmentDownloadOptions,
-	IAttachmentEncryption as AttachmentEncryption,
-	IAttachmentRendition as AttachmentRendition,
-	IAttachmentResumePoint as AttachmentResumePoint,
-	IAttachmentSegmentRange as AttachmentSegmentRange,
-	IAttachmentStoredRange as AttachmentStoredRange,
-	IAttachmentUploadOptions as AttachmentUploadOptions,
 	IDownloadOptions as DownloadOptions,
+	IEncryptedUploadResult as EncryptedUploadResult,
+	IFileEncryptionCheckpoint as FileEncryptionCheckpoint,
+	IRandomAccessSource as RandomAccessStream,
 	ISettings as Settings,
 	IUpdateChannelParams as UpdateChannel,
 	IUploadCompletion as UploadCompletion,
