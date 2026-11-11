@@ -1876,6 +1876,11 @@ export declare class AttachmentCipher {
 	static readonly attachmentIdSize = 16;
 	static readonly headerSize: number;
 	private constructor();
+	/**
+	 * The stored (encrypted) size of a file of `plainSize` bytes: what an uploader plans its parts for,
+	 * and what a reader checks the stored object against. Hosts call this rather than copy the format.
+	 */
+	static storedSizeOf(plainSize: number): number;
 	/** Fresh encryption for a 16-byte attachment ID from the slot service or FileEncryption.newAttachmentId. */
 	static create(attachmentId: Uint8Array): Promise<AttachmentCipher>;
 	/** Verify the key commitment before returning the restored cipher. */
